@@ -24,8 +24,19 @@ app.use(json());
 app.use(helmet());
 
 // Enable CORS
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  process.env.FRONTEND_URL,
+  'http://localhost:5173'
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || '*',
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    callback(new Error(`CORS policy does not allow access from ${origin}`));
+  },
   credentials: true
 }));
 
