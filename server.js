@@ -27,7 +27,7 @@ app.use(helmet());
 const allowedOrigins = [
   process.env.CLIENT_URL,
   process.env.FRONTEND_URL,
-  'http://localhost:5173'
+  'edu-task147.netlify.app'
 ].filter(Boolean);
 
 app.use(cors({
