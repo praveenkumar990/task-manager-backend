@@ -1,6 +1,31 @@
 import Task from '../models/Task.js';
 import { Types } from 'mongoose';
 
+const normalizeEnumValue = (value) => {
+  if (typeof value !== 'string') return value;
+  const trimmedValue = value.trim();
+  if (!trimmedValue) return undefined;
+  return trimmedValue
+    .toLowerCase()
+    .split(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
+const normalizeTaskPayload = (payload) => {
+  if (!payload || typeof payload !== 'object') return payload;
+  const normalized = { ...payload };
+
+  if (normalized.status) {
+    normalized.status = normalizeEnumValue(normalized.status);
+  }
+  if (normalized.priority) {
+    normalized.priority = normalizeEnumValue(normalized.priority);
+  }
+
+  return normalized;
+};
+
 // @desc    Get all user tasks (with search, filter, pagination, sort)
 // @route   GET /api/tasks
 // @access  Private
@@ -84,7 +109,8 @@ const getTaskById = async (req, res, next) => {
 // @access  Private
 const createTask = async (req, res, next) => {
   try {
-    const { title, description, status, priority, dueDate } = req.body;
+    const normalizedBody = normalizeTaskPayload(req.body);
+    const { title, description, status, priority, dueDate } = normalizedBody;
 
     const task = await Task.create({
       title,
@@ -120,7 +146,8 @@ const updateTask = async (req, res, next) => {
       return res.status(401).json({ success: false, message: 'Not authorized to update this task' });
     }
 
-    task = await Task.findByIdAndUpdate(req.params.id, req.body, {
+    const normalizedBody = normalizeTaskPayload(req.body);
+    task = await Task.findByIdAndUpdate(req.params.id, normalizedBody, {
       new: true,
       runValidators: true
     });

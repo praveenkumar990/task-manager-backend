@@ -4,6 +4,17 @@ import taskController from '../controllers/taskController.js';
 import authMiddleware from '../middleware/auth.js';
 import validationMiddleware from '../middleware/validation.js';
 
+const normalizeEnumValue = (value) => {
+  if (typeof value !== 'string') return value;
+  const trimmedValue = value.trim();
+  if (!trimmedValue) return undefined;
+  return trimmedValue
+    .toLowerCase()
+    .split(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
 const {
   getTasks,
   getTaskById,
@@ -31,8 +42,18 @@ const taskCreateValidationRules = [
     const selected = new Date(value);
     return selected >= today;
   }),
-  check('status', 'Status must be Pending, In Progress, or Completed').optional().isIn(['Pending', 'In Progress', 'Completed']),
-  check('priority', 'Priority must be Low, Medium, or High').optional().isIn(['Low', 'Medium', 'High']),
+  check('status', 'Status must be Pending, In Progress, or Completed')
+    .optional()
+    .custom((value) => {
+      if (!value) return true;
+      return ['Pending', 'In Progress', 'Completed'].includes(normalizeEnumValue(value));
+    }),
+  check('priority', 'Priority must be Low, Medium, or High')
+    .optional()
+    .custom((value) => {
+      if (!value) return true;
+      return ['Low', 'Medium', 'High'].includes(normalizeEnumValue(value));
+    }),
 ];
 
 // Validation rules for task updates
@@ -46,8 +67,18 @@ const taskUpdateValidationRules = [
     const selected = new Date(value);
     return selected >= today;
   }),
-  check('status', 'Status must be Pending, In Progress, or Completed').optional().isIn(['Pending', 'In Progress', 'Completed']),
-  check('priority', 'Priority must be Low, Medium, or High').optional().isIn(['Low', 'Medium', 'High']),
+  check('status', 'Status must be Pending, In Progress, or Completed')
+    .optional()
+    .custom((value) => {
+      if (!value) return true;
+      return ['Pending', 'In Progress', 'Completed'].includes(normalizeEnumValue(value));
+    }),
+  check('priority', 'Priority must be Low, Medium, or High')
+    .optional()
+    .custom((value) => {
+      if (!value) return true;
+      return ['Low', 'Medium', 'High'].includes(normalizeEnumValue(value));
+    }),
 ];
 
 // Task Routes
