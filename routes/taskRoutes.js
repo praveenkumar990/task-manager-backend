@@ -4,22 +4,6 @@ import taskController from '../controllers/taskController.js';
 import authMiddleware from '../middleware/auth.js';
 import validationMiddleware from '../middleware/validation.js';
 
-const normalizeEnumValue = (value) => {
-  if (typeof value !== 'string') return value;
-  const trimmed = value.trim();
-  if (!trimmed) return undefined;
-
-  const normalized = trimmed.toLowerCase();
-  if (normalized === 'low') return 'Low';
-  if (normalized === 'medium') return 'Medium';
-  if (normalized === 'high') return 'High';
-  if (normalized === 'pending') return 'Pending';
-  if (normalized === 'in progress') return 'In Progress';
-  if (normalized === 'completed') return 'Completed';
-
-  return trimmed;
-};
-
 const {
   getTasks,
   getTaskById,
@@ -28,72 +12,101 @@ const {
   deleteTask,
   getTaskStats
 } = taskController;
+
 const { protect } = authMiddleware;
 const { validate } = validationMiddleware;
 
 const router = express.Router();
 
-// Apply protect middleware to all task routes
+// Protect all routes
 router.use(protect);
 
-// Validation rules for task creation
+// Helper function
+const inAllowed = (value, allowedArray) => {
+  if (!value) return true;
+  return allowedArray.includes(String(value).trim().toLowerCase());
+};
+
+// Validation for creating task
 const taskCreateValidationRules = [
-  check('title', 'Title must be at least 5 characters').isLength({ min: 5 }).trim(),
-  check('description', 'Description must be at least 20 characters').isLength({ min: 20 }).trim(),
-  check('dueDate', 'Due date is required and cannot be in the past').custom((value) => {
-    if (!value) return false;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const selected = new Date(value);
-    return selected >= today;
-  }),
-  check('status', 'Status must be Pending, In Progress, or Completed')
-    .optional()
+  check('title', 'Title must be at least 5 characters')
+    .isLength({ min: 5 })
+    .trim(),
+
+  check('description', 'Description must be at least 20 characters')
+    .isLength({ min: 20 })
+    .trim(),
+
+  check('dueDate', 'Due date is required and cannot be in the past')
     .custom((value) => {
-      if (!value) return true;
-      return ['Pending', 'In Progress', 'Completed'].includes(normalizeEnumValue(value));
+      if (!value) return false;
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const selected = new Date(value);
+      return selected >= today;
     }),
-  check('priority', 'Priority must be Low, Medium, or High')
+
+  check('status')
     .optional()
-    .custom((value) => {
-      if (!value) return true;
-      return ['Low', 'Medium', 'High'].includes(normalizeEnumValue(value));
-    }),
+    .custom((value) =>
+      inAllowed(value, ['pending', 'in progress', 'completed'])
+    )
+    .withMessage('Status must be Pending, In Progress, or Completed'),
+
+
 ];
 
-// Validation rules for task updates
+// Validation for updating task
 const taskUpdateValidationRules = [
-  check('title', 'Title must be at least 5 characters').optional().isLength({ min: 5 }).trim(),
-  check('description', 'Description must be at least 20 characters').optional().isLength({ min: 20 }).trim(),
-  check('dueDate', 'Due date cannot be in the past').optional().custom((value) => {
-    if (!value) return true;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const selected = new Date(value);
-    return selected >= today;
-  }),
-  check('status', 'Status must be Pending, In Progress, or Completed')
+  check('title', 'Title must be at least 5 characters')
+    .optional()
+    .isLength({ min: 5 })
+    .trim(),
+
+  check('description', 'Description must be at least 20 characters')
+    .optional()
+    .isLength({ min: 20 })
+    .trim(),
+
+  check('dueDate', 'Due date cannot be in the past')
     .optional()
     .custom((value) => {
       if (!value) return true;
-      return ['Pending', 'In Progress', 'Completed'].includes(normalizeEnumValue(value));
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const selected = new Date(value);
+      return selected >= today;
     }),
-  check('priority', 'Priority must be Low, Medium, or High')
+
+  check('status')
     .optional()
-    .custom((value) => {
-      if (!value) return true;
-      return ['Low', 'Medium', 'High'].includes(normalizeEnumValue(value));
-    }),
+    .custom((value) =>
+      inAllowed(value, ['pending', 'in progress', 'completed'])
+    )
+    .withMessage('Status must be Pending, In Progress, or Completed'),
+
+  check('priority')
+    .optional()
+    .custom((value) =>
+      inAllowed(value, ['low', 'medium', 'high'])
+    )
+    .withMessage('Priority must be Low, Medium, or High'),
 ];
 
-// Task Routes
+// Routes
 router.get('/stats', getTaskStats);
 
-router.route('/')
+router
+  .route('/')
   .get(getTasks)
   .post(taskCreateValidationRules, validate, createTask);
 
-router.route('/:id')
+router
+  .route('/:id')
   .get(getTaskById)
   .put(taskUpdateValidationRules, validate, updateTask)
   .delete(deleteTask);
