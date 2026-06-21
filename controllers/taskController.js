@@ -111,12 +111,12 @@ const createTask = async (req, res, next) => {
   try {
     const normalizedBody = normalizeTaskPayload(req.body);
     const { title, description, status, priority, dueDate } = normalizedBody;
-
+    console.log('Creating task with data:', { title, description, status, priority, dueDate, user: req.user.id });
     const task = await Task.create({
       title,
       description,
       status,
-      priority,
+      priority: normalizeEnumValue(req.body.priority) || "Low",
       dueDate,
       user: req.user.id
     });
