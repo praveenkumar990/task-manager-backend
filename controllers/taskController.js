@@ -3,13 +3,18 @@ import { Types } from 'mongoose';
 
 const normalizeEnumValue = (value) => {
   if (typeof value !== 'string') return value;
-  const trimmedValue = value.trim();
-  if (!trimmedValue) return undefined;
-  return trimmedValue
-    .toLowerCase()
-    .split(' ')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+
+  const normalized = trimmed.toLowerCase();
+  if (normalized === 'low') return 'Low';
+  if (normalized === 'medium') return 'Medium';
+  if (normalized === 'high') return 'High';
+  if (normalized === 'pending') return 'Pending';
+  if (normalized === 'in progress') return 'In Progress';
+  if (normalized === 'completed') return 'Completed';
+
+  return trimmed;
 };
 
 const normalizeTaskPayload = (payload) => {
@@ -111,12 +116,11 @@ const createTask = async (req, res, next) => {
   try {
     const normalizedBody = normalizeTaskPayload(req.body);
     const { title, description, status, priority, dueDate } = normalizedBody;
-    console.log('Creating task with data:', { title, description, status, priority, dueDate, user: req.user.id });
     const task = await Task.create({
       title,
       description,
       status,
-      priority: normalizeEnumValue(req.body.priority) || "Low",
+      priority,
       dueDate,
       user: req.user.id
     });

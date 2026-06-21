@@ -6,13 +6,18 @@ import validationMiddleware from '../middleware/validation.js';
 
 const normalizeEnumValue = (value) => {
   if (typeof value !== 'string') return value;
-  const trimmedValue = value.trim();
-  if (!trimmedValue) return undefined;
-  return trimmedValue
-    .toLowerCase()
-    .split(' ')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+
+  const normalized = trimmed.toLowerCase();
+  if (normalized === 'low') return 'Low';
+  if (normalized === 'medium') return 'Medium';
+  if (normalized === 'high') return 'High';
+  if (normalized === 'pending') return 'Pending';
+  if (normalized === 'in progress') return 'In Progress';
+  if (normalized === 'completed') return 'Completed';
+
+  return trimmed;
 };
 
 const {
