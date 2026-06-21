@@ -24,10 +24,7 @@ const normalizeTaskPayload = (payload) => {
   if (normalized.status) {
     normalized.status = normalizeEnumValue(normalized.status);
   }
-  if (normalized.priority) {
-    normalized.priority = normalizeEnumValue(normalized.priority);
-  }
-
+  
   return normalized;
 };
 
