@@ -153,7 +153,7 @@ const updateTask = async (req, res, next) => {
     const normalizedBody = normalizeTaskPayload(req.body);
     task = await Task.findByIdAndUpdate(req.params.id, normalizedBody, {
       new: true,
-      runValidators: true
+      runValidators: false
     });
 
     res.json({
