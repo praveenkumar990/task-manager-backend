@@ -89,12 +89,7 @@ const taskUpdateValidationRules = [
     )
     .withMessage('Status must be Pending, In Progress, or Completed'),
 
-  check('priority')
-    .optional()
-    .custom((value) =>
-      inAllowed(value, ['low', 'medium', 'high'])
-    )
-    .withMessage('Priority must be Low, Medium, or High'),
+ 
 ];
 
 // Routes
